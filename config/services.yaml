@@ -1,0 +1,21 @@
+services:
+    _defaults:
+        autoconfigure: true
+        autowire: true
+
+    Terminal42\ChangeLanguage\EventListener\:
+        resource: ../src/EventListener/*
+        exclude: ../src/EventListener/{BackendView,DataContainer}/*
+        public: true
+
+    Terminal42\ChangeLanguage\EventListener\DataContainer\MissingLanguageIconListener: ~
+    Terminal42\ChangeLanguage\EventListener\DataContainer\PageFieldsListener: ~
+    Terminal42\ChangeLanguage\EventListener\DataContainer\PageInitializationListener: ~
+    Terminal42\ChangeLanguage\EventListener\DataContainer\PageOperationListener: ~
+
+    Terminal42\ChangeLanguage\EventListener\CallbackSetupListener:
+
+    Terminal42\ChangeLanguage\Migration\:
+        resource: ../src/Migration/*
+
+    Terminal42\ChangeLanguage\PageFinder: ~

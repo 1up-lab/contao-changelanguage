@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Terminal42\ChangeLanguage\EventListener\DataContainer;
 
+use Composer\InstalledVersions;
 use Contao\ArticleModel;
 use Contao\Backend;
 use Contao\BackendUser;
@@ -27,13 +28,7 @@ use Terminal42\ChangeLanguage\Helper\LabelCallback;
  */
 class MissingLanguageIconListener
 {
-    private static array $callbacks = [
-        'tl_page' => 'onPageLabel',
-        'tl_article' => 'onArticleLabel',
-        'tl_news' => 'onNewsChildRecords',
-        'tl_calendar_events' => 'onCalendarEventChildRecords',
-        'tl_faq' => 'onFaqChildRecords',
-    ];
+    private static $callbacks;
 
     private Security $security;
 
@@ -47,18 +42,18 @@ class MissingLanguageIconListener
      */
     public function __invoke(string $table): void
     {
-        if (\array_key_exists($table, self::$callbacks)) {
+        $callbacks = self::getCallbacks();
+
+        if (\array_key_exists($table, $callbacks)) {
             LabelCallback::createAndRegister(
                 $table,
-                fn (array $args, $previousResult) => $this->{self::$callbacks[$table]}($args, $previousResult)
+                fn (array $args, $previousResult) => $this->{$callbacks[$table]}($args, $previousResult),
             );
         }
     }
 
     /**
      * Adds missing translation warning to page tree.
-     *
-     * @param mixed $previousResult
      */
     private function onPageLabel(array $args, $previousResult = null): string
     {
@@ -95,7 +90,7 @@ class MissingLanguageIconListener
                 $label,
                 Backend::addToUrl('pn='.$mainPage->id),
                 StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode']),
-                $mainPage->title
+                $mainPage->title,
             );
         }
 
@@ -104,8 +99,6 @@ class MissingLanguageIconListener
 
     /**
      * Adds missing translation warning to article tree.
-     *
-     * @param mixed $previousResult
      */
     private function onArticleLabel(array $args, $previousResult = null): string
     {
@@ -131,8 +124,6 @@ class MissingLanguageIconListener
 
     /**
      * Generate missing translation warning for news child records.
-     *
-     * @param mixed $previousResult
      */
     private function onNewsChildRecords(array $args, $previousResult = null): string
     {
@@ -158,8 +149,6 @@ class MissingLanguageIconListener
 
     /**
      * Generate missing translation warning for calendar events child records.
-     *
-     * @param mixed $previousResult
      */
     private function onCalendarEventChildRecords(array $args, $previousResult = null): string
     {
@@ -181,8 +170,6 @@ class MissingLanguageIconListener
 
     /**
      * Generate missing translation warning for faq child records.
-     *
-     * @param mixed $previousResult
      */
     private function onFaqChildRecords(array $args, $previousResult = null): string
     {
@@ -200,7 +187,7 @@ class MissingLanguageIconListener
                 '#</div>#',
                 $this->generateLabelWithWarning('', 'position:absolute;top:6px').'</div>',
                 $label,
-                1
+                1,
             );
         }
 
@@ -220,7 +207,32 @@ class MissingLanguageIconListener
             'bundles/terminal42changelanguage/language-warning.png',
             $GLOBALS['TL_LANG']['MSC']['noMainLanguage'],
             $GLOBALS['TL_LANG']['MSC']['noMainLanguage'],
-            $imgStyle
+            $imgStyle,
         );
+    }
+
+    private static function getCallbacks(): array {
+        if (null !== self::$callbacks) {
+            return self::$callbacks;
+        }
+
+        $callbacks = [
+            'tl_page' => 'onPageLabel',
+            'tl_article' => 'onArticleLabel',
+        ];
+
+        if (InstalledVersions::isInstalled('contao/news-bundle')) {
+            $callbacks['tl_news'] = 'onNewsChildRecords';
+        }
+
+        if (InstalledVersions::isInstalled('contao/calendar-bundle')) {
+            $callbacks['tl_calendar_events'] = 'onCalendarEventChildRecords';
+        }
+
+        if (InstalledVersions::isInstalled('contao/faq-bundle')) {
+            $callbacks['tl_faq'] = 'onFaqChildRecords';
+        }
+
+        return self::$callbacks = $callbacks;
     }
 }

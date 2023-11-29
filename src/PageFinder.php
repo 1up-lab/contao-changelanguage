@@ -162,7 +162,7 @@ class PageFinder
                 $page->loadDetails();
 
                 return \array_key_exists($page->rootId, $rootPages);
-            }
+            },
         );
     }
 
@@ -277,7 +277,6 @@ class PageFinder
      */
     private function findPages(array $columns, array $values, array $options = []): array
     {
-        /** @var Collection $collection */
         $collection = PageModel::findBy($columns, $values, $options);
 
         if (!$collection instanceof Collection) {
